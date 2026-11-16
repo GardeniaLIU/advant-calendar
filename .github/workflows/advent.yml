@@ -1,0 +1,74 @@
+name: Advent AI First - build and deploy
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    # GitHub cron is UTC. 23:05 UTC = 00:05 Paris in December (CET).
+    - cron: '5 23 * 11,12 *'
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'Mode de publication'
+        required: true
+        default: 'normal'
+        type: choice
+        options: [normal, demo]
+      demo_day:
+        description: 'En mode demo, publier jusqu a cette case (1-24)'
+        required: false
+        default: '1'
+        type: string
+
+env:
+  TZ: Europe/Paris
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Recuperer le depot
+        uses: actions/checkout@v4
+
+      - name: Configurer Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Configurer GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Construire l artifact public
+        env:
+          MODE: ${{ github.event.inputs.mode || 'normal' }}
+          DEMO_DAY: ${{ github.event.inputs.demo_day || '1' }}
+          ADVENT_CONTENTS: ${{ secrets.ADVENT_CONTENTS }}
+        run: node scripts/build.mjs
+
+      - name: Controler l absence des contenus futurs
+        env:
+          MODE: ${{ github.event.inputs.mode || 'normal' }}
+          DEMO_DAY: ${{ github.event.inputs.demo_day || '1' }}
+        run: node scripts/security-test.mjs
+
+      - name: Charger l artifact Pages
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: dist
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deployer GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

@@ -1,14 +1,5 @@
 const YEAR = 2026;
 const TZ = 'Europe/Paris';
-
-// Palier 1: contenus temporaires de developpement uniquement.
-// Les vraies surprises futures ne doivent jamais etre embarquees dans ce fichier.
-const DEV_CONTENT = {
-  1: "Exemple de développement : bienvenue dans AI First 2026.",
-  6: "Exemple de développement : mini-défi IA du jour.",
-  12: "Exemple de développement : contenu factice pour tester la simulation."
-};
-
 const calendar = document.querySelector('#calendar');
 const simulatedDay = document.querySelector('#simulatedDay');
 const dialog = document.querySelector('#doorDialog');
@@ -16,10 +7,9 @@ const dialogTitle = document.querySelector('#dialogTitle');
 const dialogBody = document.querySelector('#dialogBody');
 
 function parisParts(date = new Date()) {
-  const parts = new Intl.DateTimeFormat('fr-FR', {timeZone:TZ, year:'numeric', month:'numeric', day:'numeric'}).formatToParts(date);
+  const parts = new Intl.DateTimeFormat('fr-FR', { timeZone: TZ, year:'numeric', month:'numeric', day:'numeric' }).formatToParts(date);
   return Object.fromEntries(parts.filter(p => p.type !== 'literal').map(p => [p.type, Number(p.value)]));
 }
-
 function effectiveDay() {
   if (simulatedDay.value !== '') return Number(simulatedDay.value);
   const p = parisParts();
@@ -27,13 +17,28 @@ function effectiveDay() {
   if (p.year > YEAR || (p.year === YEAR && p.month > 12) || p.day > 24) return 25;
   return p.day;
 }
-
+async function loadPublishedContent(day) {
+  const file = `contents/day-${String(day).padStart(2,'0')}.json`;
+  const response = await fetch(file, { cache: 'no-store' });
+  if (!response.ok) throw new Error('not-published');
+  return response.json();
+}
+async function openDoor(day) {
+  dialogTitle.textContent = `Case ${day}`;
+  dialogBody.textContent = 'Chargement…';
+  dialog.showModal();
+  try {
+    const content = await loadPublishedContent(day);
+    dialogTitle.textContent = content.title || `Case ${day}`;
+    dialogBody.textContent = content.message || 'Surprise publiée.';
+  } catch {
+    dialogBody.textContent = "Cette case est déverrouillée dans la simulation, mais son contenu n'est pas publié. C'est le comportement sécurisé attendu.";
+  }
+}
 function render() {
-  const now = new Intl.DateTimeFormat('fr-FR',{timeZone:TZ,dateStyle:'full',timeStyle:'short'}).format(new Date());
-  document.querySelector('#parisDate').textContent = now;
+  document.querySelector('#parisDate').textContent = new Intl.DateTimeFormat('fr-FR',{timeZone:TZ,dateStyle:'full',timeStyle:'short'}).format(new Date());
   calendar.replaceChildren();
   const current = effectiveDay();
-
   for (let day=1; day<=24; day++) {
     const isOpen = current > day;
     const isToday = current === day;
@@ -48,13 +53,6 @@ function render() {
     calendar.append(button);
   }
 }
-
-function openDoor(day) {
-  dialogTitle.textContent = `Case ${day}`;
-  dialogBody.textContent = DEV_CONTENT[day] ?? 'Contenu non publié dans le Palier 1. Cette absence est volontaire.';
-  dialog.showModal();
-}
-
 document.querySelector('#closeDialog').addEventListener('click', () => dialog.close());
 dialog.addEventListener('click', e => { if (e.target === dialog) dialog.close(); });
 simulatedDay.addEventListener('change', render);

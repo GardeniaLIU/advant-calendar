@@ -1,0 +1,4 @@
+# Les sources contenant les futures surprises ne doivent jamais entrer dans Git.
+private-content/
+.env
+.env.*

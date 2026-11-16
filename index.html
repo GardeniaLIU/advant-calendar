@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>AI First 2026 - Calendrier de l'Avent</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="shell">
+    <header class="hero">
+      <p class="eyebrow">MEETUP AI FIRST • 2026</p>
+      <h1>Calendrier de l'Avent <span>AI First</span></h1>
+      <p>24 portes, 24 découvertes. Une nouvelle case s'ouvre chaque jour à minuit, heure de Paris.</p>
+    </header>
+
+    <section class="toolbar" aria-label="Informations du calendrier">
+      <div><strong id="parisDate"></strong><span>Europe/Paris</span></div>
+      <label class="dev-control">Simulation
+        <select id="simulatedDay">
+          <option value="">Date réelle</option>
+          <option value="0">Avant le 1er décembre</option>
+          <option value="1">1 décembre</option>
+          <option value="12">12 décembre</option>
+          <option value="24">24 décembre</option>
+          <option value="25">Après le 24 décembre</option>
+        </select>
+      </label>
+    </section>
+
+    <section id="calendar" class="calendar" aria-label="24 cases du calendrier de l'Avent"></section>
+    <p class="legend"><span>✓ Ouverte</span><span>★ Aujourd'hui</span><span>🔒 Fermée</span></p>
+  </main>
+
+  <dialog id="doorDialog">
+    <button id="closeDialog" type="button" aria-label="Fermer">×</button>
+    <p class="dialog-kicker">SURPRISE DU JOUR</p>
+    <h2 id="dialogTitle"></h2>
+    <div id="dialogBody"></div>
+  </dialog>
+
+  <script src="app.js"></script>
+</body>
+</html>
